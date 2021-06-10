@@ -1,0 +1,16 @@
+version: 0.1
+log:
+  accesslog:
+    disabled: true
+  level: warn
+storage:
+  s3:
+    encrypt: true
+  delete:
+    enabled: false
+http:
+  addr: localhost:5000
+  debug:
+    addr: :5002
+    prometheus:
+      enabled: true
