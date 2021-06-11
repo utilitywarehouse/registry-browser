@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    name: registry-browser
+  name: registry-browser
+spec:
+  selector:
+    app: registry-browser
+  ports:
+    - name: frontend
+      protocol: TCP
+      port: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: registry-browser
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: registry-browser
+  template:
+    metadata:
+      name: registry-browser
+      labels:
+        app: registry-browser
+    spec:
+      containers:
+        - name: registry-browser
+          image: quay.io/utilitywarehouse/registry-browser
+          resources:
+            requests:
+              cpu: 0m
+              memory: 4Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+          ports:
+            - name: browser
+              containerPort: 8080
+        - name: registry
+          image: registry:2.7.1
+          resources:
+            requests:
+              cpu: 0m
+              memory: 32Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+          ports:
+            - name: metrics
+              containerPort: 5002
+          volumeMounts:
+            - name: registry-config
+              mountPath: /etc/docker/registry/
+              readOnly: true
+      volumes:
+        - name: registry-config
+          configMap:
+            name: registry-browser
+            items:
+              - key: config.yml
+                path: config.yml
