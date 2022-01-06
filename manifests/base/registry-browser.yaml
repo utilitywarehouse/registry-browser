@@ -29,7 +29,7 @@ spec:
     spec:
       containers:
         - name: registry-browser
-          image: quay.io/utilitywarehouse/registry-browser:v0.1.1
+          image: quay.io/utilitywarehouse/registry-browser:latest
           resources:
             requests:
               cpu: 0m
