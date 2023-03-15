@@ -1,11 +1,11 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-bases:
-  - ../base
-patchesStrategicMerge:
-  - registry-browser-patch.yaml
 secretGenerator:
-  - name: registry-browser
-    envs:
+  - envs:
       - secrets/credentials
+    name: registry-browser
     type: Opaque
+resources:
+  - ../base/
+patches:
+  - path: registry-browser-patch.yaml
