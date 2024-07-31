@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/distribution/distribution/v3/reference"
+	"github.com/distribution/reference"
 	"github.com/gorilla/mux"
 	"github.com/opencontainers/go-digest"
 	"github.com/utilitywarehouse/registry-browser/registry"
