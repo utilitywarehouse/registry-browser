@@ -7,8 +7,9 @@
     <script type="text/javascript" src="/static/datatables.min.js"></script>
     <script type="text/javascript">
       $(document).ready(function () {
-        $("#repos").DataTable();
-        $("#tags").DataTable();
+        $("#repos").DataTable({pageLength: 100});
+        $("#tags").DataTable({pageLength: 100});
+        document.querySelector('div.dataTables_filter input').focus();
       });
     </script>
   </head>
