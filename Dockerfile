@@ -17,6 +17,6 @@ RUN go test -v -cover ./... \
 FROM alpine:3.20
 ADD templates /templates
 ADD static /static
-COPY --from=build /workspace/registry-browser /registry-browser
+COPY --from=build /registry-browser /registry-browser
 
 ENTRYPOINT [ "/registry-browser" ]
