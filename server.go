@@ -16,9 +16,9 @@ import (
 	"github.com/utilitywarehouse/registry-browser/s3"
 )
 
-// templateMinus subtracts two ints within a template
-func templateMinus(a, b int) int {
-	return a - b
+// templatePlus subtracts two ints within a template
+func templatePlus(a, b int) int {
+	return a + b
 }
 
 // breadCrumb facilitates building breadcrumb style navigation menus of the
@@ -54,7 +54,7 @@ type server struct {
 // newServer returns a new server
 func newServer(r *registry.Client, s *s3.Client) (*server, error) {
 	tmpl, err := template.New("").Funcs(template.FuncMap{
-		"minus":       templateMinus,
+		"plus":        templatePlus,
 		"breadCrumbs": templateBreadCrumbs,
 	}).ParseFiles("./templates/manifests.html", "./templates/list.html")
 	if err != nil {
@@ -144,28 +144,19 @@ func (s *server) handleManifests(w http.ResponseWriter, r *http.Request) {
 
 	// Find created time
 	var created time.Time
-	for _, c := range manifestInfo.History {
-		if created.IsZero() && !c.Created.IsZero() {
-			created = c.Created
-			break
-		}
+	if manifestInfo.Config != nil {
+		created = manifestInfo.Config.Created
 	}
-
 	// Calculate the total image size
 	var imageSize int64
 	for _, l := range manifestInfo.Layers {
 		imageSize = imageSize + l.Size
 	}
-	if imageSize == 0 {
-		for _, c := range manifestInfo.History {
-			imageSize = imageSize + c.Size
-		}
-	}
 
 	// Count the layers
 	layersCount := len(manifestInfo.Layers)
-	if layersCount == 0 {
-		layersCount = len(manifestInfo.History)
+	if layersCount == 0 && manifestInfo.Config != nil {
+		layersCount = len(manifestInfo.Config.History)
 	}
 
 	var data struct {

@@ -1,468 +1,517 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8" />
-    <title>registry-browser</title>
-    <link rel="stylesheet" type="text/css" href="/static/datatables.min.css" />
-    <script type="text/javascript" src="/static/datatables.min.js"></script>
-  </head>
-  <body>
-    <h2 class="text-center">Docker Registry</h2>
-    <div class="container">
+
+<head>
+  <meta charset="utf-8" />
+  <title>registry-browser</title>
+  <link rel="stylesheet" type="text/css" href="/static/datatables.min.css" />
+  <script type="text/javascript" src="/static/datatables.min.js"></script>
+</head>
+
+<body>
+  <h2 class="text-center">Docker Registry</h2>
+  <div class="container">
+    <nav aria-label="breadcrumb">
       <ol class="breadcrumb">
-        <li><a href="/">Home</a></li>
+        <li class="breadcrumb-item"><a href="/">Home</a></li>
         {{ range (breadCrumbs .Name) }}
-        <li><a href="/repository/{{ .Path }}">{{ .Segment }}</a></li>
+        <li class="breadcrumb-item"><a href="/repository/{{ .Path }}">{{ .Segment }}</a></li>
         {{ end }}
-        <li>
-          <a href="/repository/{{ .Name }}/manifests/{{ .Reference }}"
-            >{{ .Reference }}</a
-          >
+        <li class="breadcrumb-item active">
+          {{ .Reference }}
         </li>
       </ol>
+    </nav>
 
-      <h4>Image Details</h4>
-      <table class="table table-striped table-bordered">
-        <thead bgcolor="#ddd">
-          <tr>
-            <th colspan="2">Summary</th>
-          </tr>
-        </thead>
+    <h4>Image Details</h4>
+    <table class="table table-striped table-bordered">
+      <thead bgcolor="#ddd">
         <tr>
-          <td width="20%"><b>Image</b></td>
-          <td>{{ .Name }}:{{ .Reference }}</td>
+          <th colspan="2">Summary</th>
         </tr>
-        <tr>
-          <td><b>Digest</b></td>
-          <td>{{ .Manifest.Digest }}</td>
-        </tr>
-        {{ if not .Created.IsZero }}
-        <tr>
-          <td><b>Created</b></td>
-          <td>{{ printf "%s" .Created }}</td>
-        </tr>
-        {{ end }} {{ if .Size }}
-        <tr>
-          <td><b>Size (bytes)</b></td>
-          <td>{{ .Size }}</td>
-        </tr>
-        {{ end }} {{ if .Layers }}
-        <tr>
-          <td><b>Layers</b></td>
-          <td>{{ .Layers }}</td>
-        </tr>
-        {{ end }}
-        <tr>
-          <td><b>Manifest Formats</b></td>
-          <td>
-            <ul>
-              {{ range .Manifest.Formats }}
-              <li>{{ . }}</li>
-              {{ end }}
-            </ul>
-          </td>
-        </tr>
-      </table>
+      </thead>
+      <tr>
+        <td width="20%"><b>Image</b></td>
+        <td>{{ .Name }}:{{ .Reference }}</td>
+      </tr>
+      <tr>
+        <td><b>Digest</b></td>
+        <td>{{ .Manifest.Digest }}</td>
+      </tr>
+      {{ if not .Created.IsZero }}
+      <tr>
+        <td><b>Created</b></td>
+        <td>{{ printf "%s" .Created }}</td>
+      </tr>
+      {{ end }} {{ if .Size }}
+      <tr>
+        <td><b>Size (bytes)</b></td>
+        <td>{{ .Size }}</td>
+      </tr>
+      {{ end }} {{ if .Layers }}
+      <tr>
+        <td><b>Layers</b></td>
+        <td>{{ .Layers }}</td>
+      </tr>
+      {{ end }}
+      <tr>
+        <td><b>Manifest Formats</b></td>
+        <td>
+          <ul>
+            {{ range .Manifest.Formats }}
+            <li>{{ . }}</li>
+            {{ end }}
+          </ul>
+        </td>
+      </tr>
+    </table>
 
-      {{ if .Manifest.Manifests }}
-      <h4>
-        Sub-images
-        <!-- Manifest List v2 schema 2: multi-arch or cache image
+    {{ if .Manifest.Manifests }}
+    <h4>
+      Sub-images
+      <!-- Manifest List v2 schema 2: multi-arch or cache image
 -->
-      </h4>
-      {{ range $index, $manifest := .Manifest.Manifests }}
-      <table class="table table-striped table-bordered">
-        <thead bgcolor="#ddd">
-          <tr>
-            <th colspan="2">Manifest #{{ $index }}</th>
-          </tr>
-        </thead>
+    </h4>
+    {{ range $index, $manifest := .Manifest.Manifests }}
+    <table class="table table-striped table-bordered">
+      <thead bgcolor="#ddd">
         <tr>
-          <td><b>Digest</b></td>
-          <td>
-            <a href="/repository/{{ $.Name }}/manifests/{{ $manifest.Digest }}"
-              >{{ $manifest.Digest }}</a
-            >
-          </td>
+          <th colspan="2">Manifest #{{ $index }}</th>
         </tr>
-        <tr>
-          <td><b>Size (bytes)</b></td>
-          <td>{{ $manifest.Size }}</td>
-        </tr>
-        <tr>
-          <td><b>Platform</b></td>
-          <td style="padding: 0">
-            <table
-              class="table table-bordered"
-              style="
+      </thead>
+      <tr>
+        <td><b>Digest</b></td>
+        <td>
+          <a href="/repository/{{ $.Name }}/manifests/{{ $manifest.Digest }}">{{ $manifest.Digest }}</a>
+        </td>
+      </tr>
+      <tr>
+        <td><b>Size (bytes)</b></td>
+        <td>{{ $manifest.Size }}</td>
+      </tr>
+      <tr>
+        <td><b>Platform</b></td>
+        <td style="padding: 0">
+          <table class="table table-bordered" style="
                 padding: 0;
                 width: 100%;
                 margin-bottom: 0;
                 min-height: 37px;
-              "
-            >
-              {{ if $manifest.Platform.Architecture }}
-              <tr>
-                <td style="padding: 0 10px; width: 20%">Architecture</td>
-                <td style="padding: 0 10px">
-                  {{ $manifest.Platform.Architecture }}
-                </td>
-              </tr>
-              {{ end }} {{ if $manifest.Platform.OS }}
-              <tr>
-                <td style="padding: 0 10px; width: 20%">OS</td>
-                <td style="padding: 0 10px">{{ $manifest.Platform.OS }}</td>
-              </tr>
-              {{ end }} {{ if $manifest.Platform.OSFeatures }}
-              <tr>
-                <td style="padding: 0 10px; width: 20%">OS Features</td>
-                <td style="padding: 0 10px">
-                  {{ $manifest.Platform.OSFeatures }}
-                </td>
-              </tr>
-              {{ end }} {{ if $manifest.Platform.Variant }}
-              <tr>
-                <td style="padding: 0 10px; width: 20%">Variant</td>
-                <td style="padding: 0 10px">
-                  {{ $manifest.Platform.Variant }}
-                </td>
-              </tr>
-              {{ end }} {{ if $manifest.Platform.Features }}
-              <tr>
-                <td style="padding: 0 10px; width: 20%">Features</td>
-                <td style="padding: 0 10px">
-                  {{ $manifest.Platform.Features }}
-                </td>
-              </tr>
-              {{ end }}
-            </table>
-          </td>
-        </tr>
-      </table>
-      {{ end }} {{ else if ne (len .Manifest.Layers) 0 }}
-      <h4>
-        Blobs
-        <!-- Manifest v2 schema 2-->
-      </h4>
-      <table class="table table-striped table-bordered">
-        <thead bgcolor="#ddd">
-          <tr>
-            <th>Layer #</th>
-            <th>Digest</th>
-            <th>Size (bytes)</th>
-          </tr>
-        </thead>
-        {{ range $index, $layer := .Manifest.Layers }}
+              ">
+            {{ if $manifest.Platform.Architecture }}
+            <tr>
+              <td style="padding: 0 10px; width: 20%">Architecture</td>
+              <td style="padding: 0 10px">
+                {{ $manifest.Platform.Architecture }}
+              </td>
+            </tr>
+            {{ end }} {{ if $manifest.Platform.OS }}
+            <tr>
+              <td style="padding: 0 10px; width: 20%">OS</td>
+              <td style="padding: 0 10px">{{ $manifest.Platform.OS }}</td>
+            </tr>
+            {{ end }} {{ if $manifest.Platform.OSFeatures }}
+            <tr>
+              <td style="padding: 0 10px; width: 20%">OS Features</td>
+              <td style="padding: 0 10px">
+                {{ $manifest.Platform.OSFeatures }}
+              </td>
+            </tr>
+            {{ end }} {{ if $manifest.Platform.Variant }}
+            <tr>
+              <td style="padding: 0 10px; width: 20%">Variant</td>
+              <td style="padding: 0 10px">
+                {{ $manifest.Platform.Variant }}
+              </td>
+            </tr>
+            {{ end }} {{ if $manifest.Platform.Features }}
+            <tr>
+              <td style="padding: 0 10px; width: 20%">Features</td>
+              <td style="padding: 0 10px">
+                {{ $manifest.Platform.Features }}
+              </td>
+            </tr>
+            {{ end }}
+          </table>
+        </td>
+      </tr>
+    </table>
+    {{ end }} {{ else if ne (len .Manifest.Layers) 0 }}
+    <h4>
+      Blobs
+      <!-- Manifest v2 schema 2-->
+    </h4>
+    <table class="table table-striped table-bordered">
+      <thead bgcolor="#ddd">
         <tr>
-          <td>{{ minus (len $.Manifest.Layers) $index }}</td>
-          <td>{{ $layer.Digest }}</td>
-          <td>{{ $layer.Size }}</td>
+          <th>Layer #</th>
+          <th>Digest</th>
+          <th>Size (bytes)</th>
         </tr>
-        {{ end }}
-      </table>
-      {{ end }} {{ if ne (len .Manifest.History) 0 }}
-      <h4>
-        Image History
-        <!-- Manifest v2 schema 1-->
-      </h4>
-      {{ range $index, $layer := .Manifest.History }}
-      <table class="table table-striped table-bordered">
-        <thead bgcolor="#ddd">
-          <tr>
-            <th colspan="2">
-              Layer #{{ minus (len $.Manifest.History) $index }}
-            </th>
-          </tr>
-        </thead>
-        {{ if $layer.Architecture }}
+      </thead>
+      {{ range $index, $layer := .Manifest.Layers }}
+      <tr>
+        <td>{{ plus 1 $index }}</td>
+        <td>{{ $layer.Digest }}</td>
+        <td>{{ $layer.Size }}</td>
+      </tr>
+      {{ end }}
+    </table>
+    {{ end }}
+
+    {{ if .Manifest.Config }}
+    <h4>
+      Image Config
+      <!-- Manifest v2 schema 1-->
+    </h4>
+    <table class="table table-striped table-bordered">
+      <thead bgcolor="#ddd">
         <tr>
-          <td width="20%">Architecture</td>
-          <td>{{ $layer.Architecture }}</td>
+          <th colspan="2">Config</th>
         </tr>
-        {{ end }} {{ if $layer.Config }}
-        <tr>
-          <td width="20%">Config</td>
-          <td style="padding: 0">
-            <table
-              class="table table-bordered"
-              style="
+      </thead>
+      {{ if .Manifest.Config.Architecture }}
+      <tr>
+        <td width="20%">Architecture</td>
+        <td>{{ .Manifest.Config.Architecture }}</td>
+      </tr>
+      {{ end }}
+      {{ if not .Manifest.Config.Created.IsZero }}
+      <tr>
+        <td width="20%">Created</td>
+        <td>{{ printf "%s" .Manifest.Config.Created }}</td>
+      </tr>
+      {{ end }}
+      {{ if .Manifest.Config.Container }}
+      <tr>
+        <td width="20%">Container</td>
+        <td>{{ .Manifest.Config.Container }}</td>
+      </tr>
+      {{ end }}
+      {{ if .Manifest.Config.DockerVersion }}
+      <tr>
+        <td width="20%">Docker Version</td>
+        <td>{{ .Manifest.Config.DockerVersion }}</td>
+      </tr>
+      {{ end }} {{ if .Manifest.Config.ID }}
+      <tr>
+        <td width="20%">ID</td>
+        <td>{{ .Manifest.Config.ID }}</td>
+      </tr>
+      {{ end }} {{ if .Manifest.Config.OS }}
+      <tr>
+        <td width="20%">Operating System</td>
+        <td>{{ .Manifest.Config.OS }}</td>
+      </tr>
+      {{ end }} {{ if .Manifest.Config.Parent }}
+      <tr>
+        <td width="20%">Parent</td>
+        <td>{{ .Manifest.Config.Parent }}</td>
+      </tr>
+      {{ end }} {{ if .Manifest.Config.Size }}
+      <tr>
+        <td width="20%">Size (bytes)</td>
+        <td>{{ .Manifest.Config.Size }}</td>
+      </tr>
+      {{ end }}
+      {{ if .Manifest.Config.Config }}
+      <tr>
+        <td width="20%">Config</td>
+        <td style="padding: 0">
+          <table class="table table-bordered" style="
                 padding: 0;
                 width: 100%;
                 margin-bottom: 0;
                 min-height: 37px;
-              "
-            >
-              <tr>
-                <td style="padding: 0 10px; width: 20%%">Args Escaped</td>
-                <td style="padding: 0 10px">{{ $layer.Config.ArgsEscaped }}</td>
-              </tr>
-              <tr>
-                <td style="padding: 0 10px; width: 20%%">Attach Stderr</td>
-                <td style="padding: 0 10px">
-                  {{ $layer.Config.AttachStderr }}
-                </td>
-              </tr>
-              <tr>
-                <td style="padding: 0 10px; width: 20%%">Attach Stdin</td>
-                <td style="padding: 0 10px">{{ $layer.Config.AttachStdin }}</td>
-              </tr>
-              <tr>
-                <td style="padding: 0 10px; width: 20%%">Attach Stdout</td>
-                <td style="padding: 0 10px">
-                  {{ $layer.Config.AttachStdout }}
-                </td>
-              </tr>
-              {{ if $layer.Config.Cmd }}
-              <tr>
-                <td style="padding: 0 10px; width: 20%%">Cmd</td>
-                <td style="padding: 0 10px">{{ $layer.Config.Cmd }}</td>
-              </tr>
-              {{ end }} {{ if $layer.Config.DomainName }}
-              <tr>
-                <td style="padding: 0 10px; width: 20%%">Domain Name</td>
-                <td style="padding: 0 10px">{{ $layer.Config.DomainName }}</td>
-              </tr>
-              {{ end }} {{ if $layer.Config.Entrypoint }}
-              <tr>
-                <td style="padding: 0 10px; width: 20%%">Entrypoint</td>
-                <td style="padding: 0 10px">{{ $layer.Config.Entrypoint }}</td>
-              </tr>
-              {{ end }} {{ if $layer.Config.Env }}
-              <tr>
-                <td style="padding: 0 10px; width: 20%%">Env</td>
-                <td style="padding: 0 10px">{{ $layer.Config.Env }}</td>
-              </tr>
-              {{ end }} {{ if $layer.Config.Hostname }}
-              <tr>
-                <td style="padding: 0 10px; width: 20%%">Hostname</td>
-                <td style="padding: 0 10px">{{ $layer.Config.Hostname }}</td>
-              </tr>
-              {{ end }} {{ if $layer.Config.Image }}
-              <tr>
-                <td style="padding: 0 10px; width: 20%%">Image</td>
-                <td style="padding: 0 10px">{{ $layer.Config.Image }}</td>
-              </tr>
-              {{ end }} {{ if $layer.Config.Labels }}
-              <tr>
-                <td style="padding: 0 10px; width: 20%%">Labels</td>
-                <td style="padding: 0 10px">{{ $layer.Config.Labels }}</td>
-              </tr>
-              {{ end }} {{ if $layer.Config.OnBuild }}
-              <tr>
-                <td style="padding: 0 10px; width: 20%%">On Build</td>
-                <td style="padding: 0 10px">{{ $layer.Config.OnBuild }}</td>
-              </tr>
-              {{ end }}
-              <tr>
-                <td style="padding: 0 10px; width: 20%%">Open Stdin</td>
-                <td style="padding: 0 10px">{{ $layer.Config.OpenStdin }}</td>
-              </tr>
-              <tr>
-                <td style="padding: 0 10px; width: 20%%">Stdin Once</td>
-                <td style="padding: 0 10px">{{ $layer.Config.StdinOnce }}</td>
-              </tr>
-              <tr>
-                <td style="padding: 0 10px; width: 20%%">TTY</td>
-                <td style="padding: 0 10px">{{ $layer.Config.Tty }}</td>
-              </tr>
-              {{ if $layer.Config.User }}
-              <tr>
-                <td style="padding: 0 10px; width: 20%%">User</td>
-                <td style="padding: 0 10px">{{ $layer.Config.User }}</td>
-              </tr>
-              {{ end }} {{ if $layer.Config.Volumes }}
-              <tr>
-                <td style="padding: 0 10px; width: 20%%">Volumes</td>
-                <td style="padding: 0 10px">{{ $layer.Config.Volumes }}</td>
-              </tr>
-              {{ end }} {{ if $layer.Config.WorkingDir }}
-              <tr>
-                <td style="padding: 0 10px; width: 20%%">Working Dir</td>
-                <td style="padding: 0 10px">{{ $layer.Config.WorkingDir }}</td>
-              </tr>
-              {{ end }}
-            </table>
-          </td>
-        </tr>
-        {{ end }} {{ if $layer.Container }}
-        <tr>
-          <td width="20%">Container</td>
-          <td>{{ $layer.Container }}</td>
-        </tr>
-        {{ end }} {{ if $layer.ContainerConfig }}
-        <tr>
-          <td width="20%">Container Config</td>
-          <td style="padding: 0">
-            <table
-              class="table table-bordered"
-              style="
+              ">
+            <tr>
+              <td style="padding: 0 10px; width: 20%%">Args Escaped</td>
+              <td style="padding: 0 10px">{{ .Manifest.Config.Config.ArgsEscaped }}</td>
+            </tr>
+            <tr>
+              <td style="padding: 0 10px; width: 20%%">Attach Stderr</td>
+              <td style="padding: 0 10px">
+                {{ .Manifest.Config.Config.AttachStderr }}
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 0 10px; width: 20%%">Attach Stdin</td>
+              <td style="padding: 0 10px">{{ .Manifest.Config.Config.AttachStdin }}</td>
+            </tr>
+            <tr>
+              <td style="padding: 0 10px; width: 20%%">Attach Stdout</td>
+              <td style="padding: 0 10px">
+                {{ .Manifest.Config.Config.AttachStdout }}
+              </td>
+            </tr>
+            {{ if .Manifest.Config.Config.Cmd }}
+            <tr>
+              <td style="padding: 0 10px; width: 20%%">Cmd</td>
+              <td style="padding: 0 10px">{{ .Manifest.Config.Config.Cmd }}</td>
+            </tr>
+            {{ end }} {{ if .Manifest.Config.Config.DomainName }}
+            <tr>
+              <td style="padding: 0 10px; width: 20%%">Domain Name</td>
+              <td style="padding: 0 10px">{{ .Manifest.Config.Config.DomainName }}</td>
+            </tr>
+            {{ end }} {{ if .Manifest.Config.Config.Entrypoint }}
+            <tr>
+              <td style="padding: 0 10px; width: 20%%">Entrypoint</td>
+              <td style="padding: 0 10px">{{ .Manifest.Config.Config.Entrypoint }}</td>
+            </tr>
+            {{ end }} {{ if .Manifest.Config.Config.Env }}
+            <tr>
+              <td style="padding: 0 10px; width: 20%%">Env</td>
+              <td style="padding: 0 10px">{{ .Manifest.Config.Config.Env }}</td>
+            </tr>
+            {{ end }} {{ if .Manifest.Config.Config.Hostname }}
+            <tr>
+              <td style="padding: 0 10px; width: 20%%">Hostname</td>
+              <td style="padding: 0 10px">{{ .Manifest.Config.Config.Hostname }}</td>
+            </tr>
+            {{ end }} {{ if .Manifest.Config.Config.Image }}
+            <tr>
+              <td style="padding: 0 10px; width: 20%%">Image</td>
+              <td style="padding: 0 10px">{{ .Manifest.Config.Config.Image }}</td>
+            </tr>
+            {{ end }} {{ if .Manifest.Config.Config.Labels }}
+            <tr>
+              <td style="padding: 0 10px; width: 20%%">Labels</td>
+              <td style="padding: 0">
+                <table class="table table-bordered" style="margin: 0">
+                  {{ range $k, $v := .Manifest.Config.Config.Labels }}
+                  <tr>
+                    <td style="padding: 0 10px">{{$k}}</td>
+                    <td style="padding: 0 10px">{{$v}}</td>
+                  </tr>
+                  {{end}}
+                </table>
+              </td>
+            </tr>
+            {{ end }} {{ if .Manifest.Config.Config.OnBuild }}
+            <tr>
+              <td style="padding: 0 10px; width: 20%%">On Build</td>
+              <td style="padding: 0 10px">{{ .Manifest.Config.Config.OnBuild }}</td>
+            </tr>
+            {{ end }}
+            <tr>
+              <td style="padding: 0 10px; width: 20%%">Open Stdin</td>
+              <td style="padding: 0 10px">{{ .Manifest.Config.Config.OpenStdin }}</td>
+            </tr>
+            <tr>
+              <td style="padding: 0 10px; width: 20%%">Stdin Once</td>
+              <td style="padding: 0 10px">{{ .Manifest.Config.Config.StdinOnce }}</td>
+            </tr>
+            <tr>
+              <td style="padding: 0 10px; width: 20%%">TTY</td>
+              <td style="padding: 0 10px">{{ .Manifest.Config.Config.Tty }}</td>
+            </tr>
+            {{ if .Manifest.Config.Config.User }}
+            <tr>
+              <td style="padding: 0 10px; width: 20%%">User</td>
+              <td style="padding: 0 10px">{{ .Manifest.Config.Config.User }}</td>
+            </tr>
+            {{ end }} {{ if .Manifest.Config.Config.Volumes }}
+            <tr>
+              <td style="padding: 0 10px; width: 20%%">Volumes</td>
+              <td style="padding: 0 10px">{{ .Manifest.Config.Config.Volumes }}</td>
+            </tr>
+            {{ end }} {{ if .Manifest.Config.Config.WorkingDir }}
+            <tr>
+              <td style="padding: 0 10px; width: 20%%">Working Dir</td>
+              <td style="padding: 0 10px">{{ .Manifest.Config.Config.WorkingDir }}</td>
+            </tr>
+            {{ end }}
+          </table>
+        </td>
+      </tr>
+      {{ end }}
+      {{ if .Manifest.Config.ContainerConfig }}
+      <tr>
+        <td width="20%">Container Config</td>
+        <td style="padding: 0">
+          <table class="table table-bordered" style="
                 padding: 0;
                 width: 100%;
                 margin-bottom: 0;
                 min-height: 37px;
-              "
-            >
-              <tr>
-                <td style="padding: 0 10px; width: 20%%">Args Escaped</td>
-                <td style="padding: 0 10px">
-                  {{ $layer.ContainerConfig.ArgsEscaped }}
-                </td>
-              </tr>
-              <tr>
-                <td style="padding: 0 10px; width: 20%%">Attach Stderr</td>
-                <td style="padding: 0 10px">
-                  {{ $layer.ContainerConfig.AttachStderr }}
-                </td>
-              </tr>
-              <tr>
-                <td style="padding: 0 10px; width: 20%%">Attach Stdin</td>
-                <td style="padding: 0 10px">
-                  {{ $layer.ContainerConfig.AttachStdin }}
-                </td>
-              </tr>
-              <tr>
-                <td style="padding: 0 10px; width: 20%%">Attach Stdout</td>
-                <td style="padding: 0 10px">
-                  {{ $layer.ContainerConfig.AttachStdout }}
-                </td>
-              </tr>
-              {{ if $layer.ContainerConfig.Cmd }}
-              <tr>
-                <td style="padding: 0 10px; width: 20%%">Cmd</td>
-                <td style="padding: 0 10px">
-                  {{ $layer.ContainerConfig.Cmd }}
-                </td>
-              </tr>
-              {{ end }} {{ if $layer.ContainerConfig.DomainName }}
-              <tr>
-                <td style="padding: 0 10px; width: 20%%">Domain Name</td>
-                <td style="padding: 0 10px">
-                  {{ $layer.ContainerConfig.DomainName }}
-                </td>
-              </tr>
-              {{ end }} {{ if $layer.ContainerConfig.Entrypoint }}
-              <tr>
-                <td style="padding: 0 10px; width: 20%%">Entrypoint</td>
-                <td style="padding: 0 10px">
-                  {{ $layer.ContainerConfig.Entrypoint }}
-                </td>
-              </tr>
-              {{ end }} {{ if $layer.ContainerConfig.Env }}
-              <tr>
-                <td style="padding: 0 10px; width: 20%%">Env</td>
-                <td style="padding: 0 10px">
-                  {{ $layer.ContainerConfig.Env }}
-                </td>
-              </tr>
-              {{ end }} {{ if $layer.ContainerConfig.Hostname }}
-              <tr>
-                <td style="padding: 0 10px; width: 20%%">Hostname</td>
-                <td style="padding: 0 10px">
-                  {{ $layer.ContainerConfig.Hostname }}
-                </td>
-              </tr>
-              {{ end }} {{ if $layer.ContainerConfig.Image }}
-              <tr>
-                <td style="padding: 0 10px; width: 20%%">Image</td>
-                <td style="padding: 0 10px">
-                  {{ $layer.ContainerConfig.Image }}
-                </td>
-              </tr>
-              {{ end }} {{ if $layer.ContainerConfig.Labels }}
-              <tr>
-                <td style="padding: 0 10px; width: 20%%">Labels</td>
-                <td style="padding: 0 10px">
-                  {{ $layer.ContainerConfig.Labels }}
-                </td>
-              </tr>
-              {{ end }} {{ if $layer.ContainerConfig.OnBuild }}
-              <tr>
-                <td style="padding: 0 10px; width: 20%%">On Build</td>
-                <td style="padding: 0 10px">
-                  {{ $layer.ContainerConfig.OnBuild }}
-                </td>
-              </tr>
-              {{ end }}
-              <tr>
-                <td style="padding: 0 10px; width: 20%%">Open Stdin</td>
-                <td style="padding: 0 10px">
-                  {{ $layer.ContainerConfig.OpenStdin }}
-                </td>
-              </tr>
-              <tr>
-                <td style="padding: 0 10px; width: 20%%">Stdin Once</td>
-                <td style="padding: 0 10px">
-                  {{ $layer.ContainerConfig.StdinOnce }}
-                </td>
-              </tr>
-              <tr>
-                <td style="padding: 0 10px; width: 20%%">TTY</td>
-                <td style="padding: 0 10px">
-                  {{ $layer.ContainerConfig.Tty }}
-                </td>
-              </tr>
-              {{ if $layer.ContainerConfig.User }}
-              <tr>
-                <td style="padding: 0 10px; width: 20%%">User</td>
-                <td style="padding: 0 10px">
-                  {{ $layer.ContainerConfig.User }}
-                </td>
-              </tr>
-              {{ end }} {{ if $layer.ContainerConfig.Volumes }}
-              <tr>
-                <td style="padding: 0 10px; width: 20%%">Volumes</td>
-                <td style="padding: 0 10px">
-                  {{ $layer.ContainerConfig.Volumes }}
-                </td>
-              </tr>
-              {{ end }} {{ if $layer.ContainerConfig.WorkingDir }}
-              <tr>
-                <td style="padding: 0 10px; width: 20%%">Working Dir</td>
-                <td style="padding: 0 10px">
-                  {{ $layer.ContainerConfig.WorkingDir }}
-                </td>
-              </tr>
-              {{ end }}
-            </table>
-          </td>
-        </tr>
-        {{ end }} {{ if not $layer.Created.IsZero }}
-        <tr>
-          <td width="20%">Created</td>
-          <td>{{ printf "%s" $layer.Created }}</td>
-        </tr>
-        {{ end }} {{ if $layer.DockerVersion }}
-        <tr>
-          <td width="20%">Docker Version</td>
-          <td>{{ $layer.DockerVersion }}</td>
-        </tr>
-        {{ end }} {{ if $layer.ID }}
-        <tr>
-          <td width="20%">ID</td>
-          <td>{{ $layer.ID }}</td>
-        </tr>
-        {{ end }} {{ if $layer.OS }}
-        <tr>
-          <td width="20%">Operating System</td>
-          <td>{{ $layer.OS }}</td>
-        </tr>
-        {{ end }} {{ if $layer.Parent }}
-        <tr>
-          <td width="20%">Parent</td>
-          <td>{{ $layer.Parent }}</td>
-        </tr>
-        {{ end }} {{ if $layer.Size }}
-        <tr>
-          <td width="20%">Size (bytes)</td>
-          <td>{{ $layer.Size }}</td>
-        </tr>
-        {{ end }}
-        <tr>
-          <td width="20%">Throwaway</td>
-          <td>{{ $layer.Throwaway }}</td>
-        </tr>
-      </table>
-      {{ end }} {{ end }}
-    </div>
-  </body>
+              ">
+            <tr>
+              <td style="padding: 0 10px; width: 30%%">Args Escaped</td>
+              <td style="padding: 0 10px">
+                {{ .Manifest.Config.ContainerConfig.ArgsEscaped }}
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 0 10px; width: 30%%">Attach Stderr</td>
+              <td style="padding: 0 10px">
+                {{ .Manifest.Config.ContainerConfig.AttachStderr }}
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 0 10px; width: 20%%">Attach Stdin</td>
+              <td style="padding: 0 10px">
+                {{ .Manifest.Config.ContainerConfig.AttachStdin }}
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 0 10px; width: 20%%">Attach Stdout</td>
+              <td style="padding: 0 10px">
+                {{ .Manifest.Config.ContainerConfig.AttachStdout }}
+              </td>
+            </tr>
+            {{ if .Manifest.Config.ContainerConfig.Cmd }}
+            <tr>
+              <td style="padding: 0 10px; width: 20%%">Cmd</td>
+              <td style="padding: 0 10px">
+                {{ .Manifest.Config.ContainerConfig.Cmd }}
+              </td>
+            </tr>
+            {{ end }} {{ if .Manifest.Config.ContainerConfig.DomainName }}
+            <tr>
+              <td style="padding: 0 10px; width: 20%%">Domain Name</td>
+              <td style="padding: 0 10px">
+                {{ .Manifest.Config.ContainerConfig.DomainName }}
+              </td>
+            </tr>
+            {{ end }} {{ if .Manifest.Config.ContainerConfig.Entrypoint }}
+            <tr>
+              <td style="padding: 0 10px; width: 20%%">Entrypoint</td>
+              <td style="padding: 0 10px">
+                {{ .Manifest.Config.ContainerConfig.Entrypoint }}
+              </td>
+            </tr>
+            {{ end }} {{ if .Manifest.Config.ContainerConfig.Env }}
+            <tr>
+              <td style="padding: 0 10px; width: 20%%">Env</td>
+              <td style="padding: 0 10px">
+                {{ .Manifest.Config.ContainerConfig.Env }}
+              </td>
+            </tr>
+            {{ end }} {{ if .Manifest.Config.ContainerConfig.Hostname }}
+            <tr>
+              <td style="padding: 0 10px; width: 20%%">Hostname</td>
+              <td style="padding: 0 10px">
+                {{ .Manifest.Config.ContainerConfig.Hostname }}
+              </td>
+            </tr>
+            {{ end }} {{ if .Manifest.Config.ContainerConfig.Image }}
+            <tr>
+              <td style="padding: 0 10px; width: 20%%">Image</td>
+              <td style="padding: 0 10px">
+                {{ .Manifest.Config.ContainerConfig.Image }}
+              </td>
+            </tr>
+            {{ end }} {{ if .Manifest.Config.ContainerConfig.Labels }}
+            <tr>
+              <td style="padding: 0 10px; width: 20%%">Labels</td>
+              <td style="padding: 0 10px">
+                {{ .Manifest.Config.ContainerConfig.Labels }}
+              </td>
+            </tr>
+            {{ end }} {{ if .Manifest.Config.ContainerConfig.OnBuild }}
+            <tr>
+              <td style="padding: 0 10px; width: 20%%">On Build</td>
+              <td style="padding: 0 10px">
+                {{ .Manifest.Config.ContainerConfig.OnBuild }}
+              </td>
+            </tr>
+            {{ end }}
+            <tr>
+              <td style="padding: 0 10px; width: 20%%">Open Stdin</td>
+              <td style="padding: 0 10px">
+                {{ .Manifest.Config.ContainerConfig.OpenStdin }}
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 0 10px; width: 20%%">Stdin Once</td>
+              <td style="padding: 0 10px">
+                {{ .Manifest.Config.ContainerConfig.StdinOnce }}
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 0 10px; width: 20%%">TTY</td>
+              <td style="padding: 0 10px">
+                {{ .Manifest.Config.ContainerConfig.Tty }}
+              </td>
+            </tr>
+            {{ if .Manifest.Config.ContainerConfig.User }}
+            <tr>
+              <td style="padding: 0 10px; width: 20%%">User</td>
+              <td style="padding: 0 10px">
+                {{ .Manifest.Config.ContainerConfig.User }}
+              </td>
+            </tr>
+            {{ end }} {{ if .Manifest.Config.ContainerConfig.Volumes }}
+            <tr>
+              <td style="padding: 0 10px; width: 20%%">Volumes</td>
+              <td style="padding: 0 10px">
+                {{ .Manifest.Config.ContainerConfig.Volumes }}
+              </td>
+            </tr>
+            {{ end }} {{ if .Manifest.Config.ContainerConfig.WorkingDir }}
+            <tr>
+              <td style="padding: 0 10px; width: 20%%">Working Dir</td>
+              <td style="padding: 0 10px">
+                {{ .Manifest.Config.ContainerConfig.WorkingDir }}
+              </td>
+            </tr>
+            {{ end }}
+          </table>
+        </td>
+      </tr>
+      {{ end }}
+
+
+      {{ if ne (len .Manifest.Config.History) 0 }}
+      <tr>
+        <td width="20%">Image History</td>
+        <td style="padding: 0">
+
+          <table class="table table-bordered" style="margin: 0">
+            {{ range $index, $layer := .Manifest.Config.History }}
+            <tr>
+              <td width="20%" style="text-align: end;">Layer #{{ plus 1 $index }}</td>
+              <td style="padding: 0">
+                <table class="table table-bordered" style="margin: 0">
+                  {{ if not $layer.Created.IsZero }}
+                  <tr>
+                    <td width="20%">Created</td>
+                    <td>{{ printf "%s" $layer.Created }}</td>
+                  </tr>
+                  {{ end }} {{ if $layer.CreatedBy }}
+                  <tr>
+                    <td width="20%">Created By</td>
+                    <td>{{ $layer.CreatedBy }}</td>
+                  </tr>
+                  {{ end }} {{ if $layer.Author }}
+                  <tr>
+                    <td width="20%">Author</td>
+                    <td>{{ $layer.Author }}</td>
+                  </tr>
+                  {{ end }} {{ if $layer.Comment }}
+                  <tr>
+                    <td width="20%">Comment</td>
+                    <td>{{ $layer.Comment }}</td>
+                  </tr>
+                  {{ end }} {{ if $layer.EmptyLayer }}
+                  <tr>
+                    <td width="20%">Empty Layer</td>
+                    <td>{{ $layer.EmptyLayer }}</td>
+                  </tr>
+                  {{ end }}
+                </table>
+                {{ end }}
+              </td>
+            </tr>
+            {{ end }}
+          </table>
+        </td>
+      </tr>
+
+    </table>
+    {{ end }}
+  </div>
+</body>
+
 </html>
