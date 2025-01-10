@@ -1,62 +1,69 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8" />
-    <title>registry-browser</title>
-    <link rel="stylesheet" type="text/css" href="/static/datatables.min.css" />
-    <script type="text/javascript" src="/static/datatables.min.js"></script>
-    <script type="text/javascript">
-      $(document).ready(function () {
-        $("#repos").DataTable({pageLength: 100});
-        $("#tags").DataTable({pageLength: 100});
-        document.querySelector('div.dataTables_filter input').focus();
-      });
-    </script>
-  </head>
-  <body>
-    <h2 class="text-center">Docker Registry</h2>
-    <div class="container">
+
+<head>
+  <meta charset="utf-8" />
+  <title>registry-browser</title>
+  <link rel="stylesheet" type="text/css" href="/static/datatables.min.css" />
+  <script type="text/javascript" src="/static/datatables.min.js"></script>
+  <script type="text/javascript">
+    $(document).ready(function () {
+      $("#repos").DataTable({ pageLength: 100 });
+      $("#tags").DataTable({ pageLength: 100 });
+      document.querySelector('#dt-search-0').focus();
+    });
+  </script>
+</head>
+
+<body>
+  <h2 class="text-center">Docker Registry</h2>
+  <div class="container">
+    <nav aria-label="breadcrumb">
       <ol class="breadcrumb">
-        <li><a href="/">Home</a></li>
+        <li class="breadcrumb-item"><a href="/">Home</a></li>
         {{ range (breadCrumbs .Name) }}
-        <li><a href="/repository/{{ .Path }}">{{ .Segment }}</a></li>
+        <li class="breadcrumb-item"><a href="/repository/{{ .Path }}">{{ .Segment }}</a></li>
         {{ end }}
       </ol>
-      {{ if gt (len .Repos) 0 }}
-      <table id="repos" class="table table-striped table-bordered">
-        <thead bgcolor="#ddd">
-          <tr>
-            <th>Repositories</th>
-          </tr>
-        </thead>
-        <tbody>
-          {{ range .Repos }}
-          <tr>
-            <td>
-              <a href="/repository/{{ $.Name }}/{{ . }}">{{ . }}</a>
-            </td>
-          </tr>
-          {{ end }}
-        </tbody>
-      </table>
-      {{ end }}{{ if gt (len .Tags) 0 }}
-      <table id="tags" class="table table-striped table-bordered">
-        <thead bgcolor="#ddd">
-          <tr>
-            <th>Tags</th>
-          </tr>
-        </thead>
-        <tbody>
-          {{ range .Tags }}
-          <tr>
-            <td>
-              <a href="/repository/{{ $.Name }}/manifests/{{ . }}">{{ . }}</a>
-            </td>
-          </tr>
-          {{ end }}
-        </tbody>
-      </table>
-      {{ end }}
-    </div>
-  </body>
+    </nav>
+
+
+    {{ if gt (len .Repos) 0 }}
+    <table id="repos" class="table table-striped table-bordered">
+      <thead bgcolor="#ddd">
+        <tr>
+          <th>Repositories</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{ range .Repos }}
+        <tr>
+          <td>
+            <a href="/repository/{{ $.Name }}/{{ . }}">{{ . }}</a>
+          </td>
+        </tr>
+        {{ end }}
+      </tbody>
+    </table>
+    {{ end }}{{ if gt (len .Tags) 0 }}
+    <table id="tags" class="table table-striped table-bordered">
+      <thead bgcolor="#ddd">
+        <tr>
+          <th>Tags</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{ range .Tags }}
+        <tr>
+          <td>
+            <a href="/repository/{{ $.Name }}/manifests/{{ . }}">{{ . }}</a>
+          </td>
+        </tr>
+        {{ end }}
+      </tbody>
+    </table>
+    {{ end }}
+  </div>
+</body>
+
 </html>
