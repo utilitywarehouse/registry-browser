@@ -14,7 +14,7 @@ COPY . .
 RUN go test -v -cover ./... \
       && CGO_ENABLED=0 go build -o /registry-browser .
 
-FROM alpine:3.20
+FROM alpine:3.21
 ADD templates /templates
 ADD static /static
 COPY --from=build /registry-browser /registry-browser
