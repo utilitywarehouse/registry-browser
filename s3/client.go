@@ -2,6 +2,8 @@ package s3
 
 import (
 	"path/filepath"
+	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -24,6 +26,12 @@ type Client struct {
 	svc    s3iface.S3API
 }
 
+type S3ObjectInfo struct {
+	Key          string
+	LastModified time.Time
+	Size         int64
+}
+
 // New returns a new client
 func New(bucket string) (*Client, error) {
 	sess, err := session.NewSession()
@@ -43,19 +51,55 @@ func New(bucket string) (*Client, error) {
 func (c *Client) List(prefix string) ([]string, error) {
 	absPrefix := filepath.Join(repositoriesPrefix, prefix) + "/"
 
-	resp, err := c.svc.ListObjectsV2(&s3.ListObjectsV2Input{
+	input := &s3.ListObjectsV2Input{
 		Bucket:    aws.String(c.bucket),
 		Prefix:    aws.String(absPrefix),
 		Delimiter: aws.String(delimiter),
+	}
+
+	var items []string
+
+	err := c.svc.ListObjectsV2Pages(input, func(page *s3.ListObjectsV2Output, lastPage bool) bool {
+		for _, p := range page.CommonPrefixes {
+			items = append(items, filepath.Base(*p.Prefix))
+		}
+		return !lastPage
 	})
 	if err != nil {
 		return []string{}, err
 	}
 
-	var items []string
-	for _, p := range resp.CommonPrefixes {
-		items = append(items, filepath.Base(*p.Prefix))
+	return items, nil
+}
+
+// ListTagObjectsWithMetadata returns metadata for all S3 objects under the given prefix
+// that end with "/current/link", which represent active tag pointers in the registry.
+func (c *Client) ListTagObjectsWithMetadata(prefix string) ([]S3ObjectInfo, error) {
+	var results []S3ObjectInfo
+
+	absPrefix := filepath.Join(repositoriesPrefix, prefix) + "/"
+
+	input := &s3.ListObjectsV2Input{
+		Bucket: aws.String(c.bucket),
+		Prefix: aws.String(absPrefix),
 	}
 
-	return items, nil
+	err := c.svc.ListObjectsV2Pages(input, func(page *s3.ListObjectsV2Output, lastPage bool) bool {
+		for _, obj := range page.Contents {
+			// Only include objects ending in /current/link
+			if strings.HasSuffix(*obj.Key, "/current/link") {
+				results = append(results, S3ObjectInfo{
+					Key:          *obj.Key,
+					LastModified: *obj.LastModified,
+					Size:         *obj.Size,
+				})
+			}
+		}
+		return !lastPage
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return results, nil
 }

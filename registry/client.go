@@ -87,7 +87,7 @@ func New(registryURL string) (*Client, error) {
 // ManifestInfo retrieves manifest information for a given name+reference from all
 // supported schemas
 func (c *Client) ManifestInfo(name, reference string) (*ManifestInfo, error) {
-	var manifestIno = new(ManifestInfo)
+	manifestIno := new(ManifestInfo)
 
 	// Retrieve the manifest in multiple formats so that we can provide the
 	// most information possible to the client. If the reference doesn't support a

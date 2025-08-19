@@ -9,7 +9,7 @@
   <script type="text/javascript">
     $(document).ready(function () {
       $("#repos").DataTable({ pageLength: 100 });
-      $("#tags").DataTable({ pageLength: 100 });
+      $("#tags").DataTable({ pageLength: 100, order: [[1, 'desc']] });
       document.querySelector('#dt-search-0').focus();
     });
   </script>
@@ -50,6 +50,7 @@
       <thead bgcolor="#ddd">
         <tr>
           <th>Tags</th>
+          <th>Created At</th>
         </tr>
       </thead>
       <tbody>
@@ -58,6 +59,7 @@
           <td>
             <a href="/repository/{{ $.Name }}/manifests/{{ . }}">{{ . }}</a>
           </td>
+          <td>{{ index $.CreatedAt . }}</td>
         </tr>
         {{ end }}
       </tbody>

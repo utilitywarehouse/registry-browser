@@ -100,21 +100,40 @@ func (s *server) handleList(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	tags, err := s.s3.List(filepath.Join(name, "_manifests/tags"))
+	objects, err := s.s3.ListTagObjectsWithMetadata(filepath.Join(name, "_manifests/tags"))
 	if err != nil {
-		http.Error(w, "error retrieving tags", http.StatusInternalServerError)
+		http.Error(w, "error retrieving tag metadata", http.StatusInternalServerError)
 		log.Printf("error: %s", err)
 		return
 	}
 
+	tagTimes := make(map[string]time.Time)
+	for _, obj := range objects {
+		parts := strings.Split(obj.Key, "/")
+		if len(parts) < 3 {
+			continue
+		}
+		tag := parts[len(parts)-3] // tag is third from the end
+		if t, ok := tagTimes[tag]; !ok || obj.LastModified.After(t) {
+			tagTimes[tag] = obj.LastModified
+		}
+	}
+
+	var tags []string
+	for tag := range tagTimes {
+		tags = append(tags, tag)
+	}
+
 	var data struct {
-		Name  string
-		Repos []string
-		Tags  []string
+		Name      string
+		Repos     []string
+		Tags      []string
+		CreatedAt map[string]time.Time
 	}
 	data.Name = name
 	data.Repos = repos
 	data.Tags = tags
+	data.CreatedAt = tagTimes
 
 	rendered := &bytes.Buffer{}
 	if err := s.tmpl.ExecuteTemplate(rendered, "list.html", data); err != nil {
