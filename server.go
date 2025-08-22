@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -57,6 +58,7 @@ func newServer(r *registry.Client, s *s3.Client) (*server, error) {
 	tmpl, err := template.New("").Funcs(template.FuncMap{
 		"plus":        templatePlus,
 		"breadCrumbs": templateBreadCrumbs,
+		"join":        strings.Join,
 	}).ParseFiles("./templates/manifests.html", "./templates/list.html")
 	if err != nil {
 		return nil, err
@@ -140,8 +142,9 @@ type tagInfo struct {
 }
 
 type manifest struct {
-	SHA256    string
-	CreatedAt time.Time
+	SHA256     string
+	ModifiedAt time.Time
+	Tags       []string // current tags
 }
 
 func parseTagsInfo(objects []s3.S3ObjectInfo) map[string]*tagInfo {
@@ -179,13 +182,35 @@ func parseTagsInfo(objects []s3.S3ObjectInfo) map[string]*tagInfo {
 			if !ok {
 				tags[tag] = &tagInfo{Tag: tag}
 			}
-			manifest := manifest{SHA256: sha256, CreatedAt: obj.LastModified}
+			manifest := manifest{SHA256: sha256, ModifiedAt: obj.LastModified}
 
 			tags[tag].Index = append(tags[tag].Index, manifest)
 
 			// update current manifests if latest found
-			if obj.LastModified.After(tags[tag].Manifest.CreatedAt) {
+			if obj.LastModified.After(tags[tag].Manifest.ModifiedAt) {
 				tags[tag].Manifest = manifest
+			}
+		}
+	}
+
+	// sort each index and only keep latest 10
+	for _, tag := range tags {
+		// sort in desc order of CreatedAt
+		slices.SortFunc(tag.Index, func(a, b manifest) int {
+			return b.ModifiedAt.Compare(a.ModifiedAt)
+		})
+		if len(tag.Index) > 10 {
+			tag.Index = slices.Delete(tag.Index, 10, len(tag.Index))
+		}
+	}
+
+	// Loop through manifests history (index) and find current tags
+	for _, tag := range tags {
+		for i := range tag.Index {
+			for _, LookupTag := range tags {
+				if tag.Index[i].SHA256 == LookupTag.Manifest.SHA256 {
+					tag.Index[i].Tags = append(tag.Index[i].Tags, LookupTag.Tag)
+				}
 			}
 		}
 	}

@@ -9,10 +9,34 @@
   <script type="text/javascript">
     $(document).ready(function () {
       $("#repos").DataTable({ pageLength: 100 });
-      $("#tags").DataTable({ pageLength: 100, order: [[2, 'desc']] });
+      var tagsTable = $("#tags").DataTable({ pageLength: 100, order: [[3, 'desc']] });
+      tagsTable.column(4).visible(false);
+
+      tagsTable.on('click', 'td.details-control', function () {
+        var tr = $(this).closest('tr');
+        var row = tagsTable.row(tr);
+
+        if (row.child.isShown()) {
+          // This row is already open - close it
+          row.child.hide();
+          $(this).text("▶")
+        } else {
+          // Open this row
+          row.child(row.data()[4]).show();
+          $(this).text("▼")
+        }
+      });
+
       document.querySelector('#dt-search-0').focus();
     });
   </script>
+  <style>
+    .details-control {
+      cursor: pointer;
+      text-align: center;
+      vertical-align: middle;
+    }
+  </style>
 </head>
 
 <body>
@@ -50,22 +74,58 @@
     <table id="tags" class="table table-striped table-bordered">
       <thead bgcolor="#ddd">
         <tr>
+          <th></th>
           <th>Tags</th>
           <th>Manifest</th>
           <th>Modified At</th>
+          <th style="display: none;"></th>
         </tr>
       </thead>
       <tbody>
         {{ range $tag, $tagInfo := .Tags }}
         <tr>
+          {{ if gt (len $tagInfo.Index) 1 }}
+          <td class="details-control">▶</td>
+          {{else}}
+          <td></td>
+          {{end}}
           <td>
             <a href="/repository/{{ $.Name }}/manifests/{{ $tag }}">{{ $tagInfo.Tag }}</a>
           </td>
           <td>
             <span style="background-color:#ddd;">sha256</span>
-            <a href="/repository/{{ $.Name }}/manifests/{{ $tag }}">{{printf "%.12s" $tagInfo.Manifest.SHA256}}</a>
+            {{printf "%.12s" $tagInfo.Manifest.SHA256}}
           </td>
           <td>{{ $tagInfo.ModifiedAt }}</td>
+          <td style="display: none;">
+            <!-- add nested table for index info will be shown by JS click event -->
+            {{ if gt (len $tagInfo.Index) 1 }}
+            <div style="padding-left:50px;">
+              <h6>Latest version History for <span style="background-color:#ddd;">{{$tag}}</span> Tag:</h6>
+              <table class="table table-bordered">
+                <thead>
+                  <tr>
+                    <th>Current Tags</th>
+                    <th>Manifest</th>
+                    <th>Modified At</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {{ range $index := $tagInfo.Index }}
+                  <tr>
+                    <td>{{ join $index.Tags ", " }}</td>
+                    <td>
+                      <span style="background-color:#ddd;">sha256</span>
+                      {{printf "%.12s" $index.SHA256}}
+                    </td>
+                    <td>{{ $index.ModifiedAt }}</td>
+                  </tr>
+                  {{end}}
+                </tbody>
+              </table>
+            </div>
+            {{end}}
+          </td>
         </tr>
         {{ end }}
       </tbody>
