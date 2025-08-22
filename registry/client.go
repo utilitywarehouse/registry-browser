@@ -87,7 +87,7 @@ func New(registryURL string) (*Client, error) {
 // ManifestInfo retrieves manifest information for a given name+reference from all
 // supported schemas
 func (c *Client) ManifestInfo(name, reference string) (*ManifestInfo, error) {
-	manifestIno := new(ManifestInfo)
+	manifestInfo := new(ManifestInfo)
 
 	// Retrieve the manifest in multiple formats so that we can provide the
 	// most information possible to the client. If the reference doesn't support a
@@ -109,10 +109,10 @@ func (c *Client) ManifestInfo(name, reference string) (*ManifestInfo, error) {
 		(manifestListSchema2.MediaType == manifestlist.MediaTypeManifestList ||
 			manifestListSchema2.MediaType == imagespec.MediaTypeImageIndex) {
 
-		manifestIno.Digest = digestListSchema2
-		manifestIno.Manifests = manifestListSchema2.Manifests
-		manifestIno.Formats = append(manifestIno.Formats, manifestListSchema2.MediaType)
-		return manifestIno, nil
+		manifestInfo.Digest = digestListSchema2
+		manifestInfo.Manifests = manifestListSchema2.Manifests
+		manifestInfo.Formats = append(manifestInfo.Formats, manifestListSchema2.MediaType)
+		return manifestInfo, nil
 	}
 
 	manifestSchema2, digestSchema2, err := c.manifestSchema2(name, reference)
@@ -120,29 +120,29 @@ func (c *Client) ManifestInfo(name, reference string) (*ManifestInfo, error) {
 		return nil, err
 	}
 	if manifestSchema2 == nil {
-		return manifestIno, nil
+		return manifestInfo, nil
 	}
 
 	if manifestSchema2.SchemaVersion == 2 &&
 		(manifestSchema2.MediaType == schema2.MediaTypeManifest ||
 			manifestSchema2.MediaType == imagespec.MediaTypeImageManifest) {
 
-		manifestIno.Digest = digestSchema2
-		manifestIno.Layers = manifestSchema2.Layers
-		manifestIno.Formats = append(manifestIno.Formats, manifestSchema2.MediaType)
+		manifestInfo.Digest = digestSchema2
+		manifestInfo.Layers = manifestSchema2.Layers
+		manifestInfo.Formats = append(manifestInfo.Formats, manifestSchema2.MediaType)
 	}
 
 	if manifestSchema2.Config.Digest == "" {
-		return manifestIno, nil
+		return manifestInfo, nil
 	}
 
 	config, err := c.ImageConfig(name, string(manifestSchema2.Config.Digest))
 	if err != nil {
 		return nil, err
 	}
-	manifestIno.Config = config
+	manifestInfo.Config = config
 
-	return manifestIno, nil
+	return manifestInfo, nil
 }
 
 // manifestRequest unmarshals the manifest for name+reference into the provided

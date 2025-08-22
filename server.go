@@ -16,7 +16,7 @@ import (
 	"github.com/utilitywarehouse/registry-browser/s3"
 )
 
-// templatePlus subtracts two ints within a template
+// templatePlus adds two ints within a template
 func templatePlus(a, b int) int {
 	return a + b
 }
