@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -11,7 +12,7 @@ import (
 
 	"github.com/distribution/reference"
 	"github.com/gorilla/mux"
-	"github.com/opencontainers/go-digest"
+	ocDigest "github.com/opencontainers/go-digest"
 	"github.com/utilitywarehouse/registry-browser/registry"
 	"github.com/utilitywarehouse/registry-browser/s3"
 )
@@ -68,7 +69,7 @@ func newServer(r *registry.Client, s *s3.Client) (*server, error) {
 	}
 
 	m := mux.NewRouter()
-	m.HandleFunc("/repository/{name:"+reference.NameRegexp.String()+"}/manifests/{reference:"+reference.TagRegexp.String()+"|"+digest.DigestRegexp.String()+"}", srv.handleManifests)
+	m.HandleFunc("/repository/{name:"+reference.NameRegexp.String()+"}/manifests/{reference:"+reference.TagRegexp.String()+"|"+ocDigest.DigestRegexp.String()+"}", srv.handleManifests)
 	m.HandleFunc("/repository/{name:"+reference.NameRegexp.String()+"}", srv.handleList)
 	m.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	m.HandleFunc("/", srv.handleList)
@@ -107,33 +108,17 @@ func (s *server) handleList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tagTimes := make(map[string]time.Time)
-	for _, obj := range objects {
-		parts := strings.Split(obj.Key, "/")
-		if len(parts) < 3 {
-			continue
-		}
-		tag := parts[len(parts)-3] // tag is third from the end
-		if t, ok := tagTimes[tag]; !ok || obj.LastModified.After(t) {
-			tagTimes[tag] = obj.LastModified
-		}
-	}
-
-	var tags []string
-	for tag := range tagTimes {
-		tags = append(tags, tag)
-	}
+	tags := parseTagsInfo(objects)
 
 	var data struct {
-		Name      string
-		Repos     []string
-		Tags      []string
-		CreatedAt map[string]time.Time
+		Name  string
+		Repos []string
+		Tags  map[string]*tagInfo
 	}
+
 	data.Name = name
 	data.Repos = repos
 	data.Tags = tags
-	data.CreatedAt = tagTimes
 
 	rendered := &bytes.Buffer{}
 	if err := s.tmpl.ExecuteTemplate(rendered, "list.html", data); err != nil {
@@ -145,6 +130,64 @@ func (s *server) handleList(w http.ResponseWriter, r *http.Request) {
 	if _, err := rendered.WriteTo(w); err != nil {
 		log.Printf("error: %s", err)
 	}
+}
+
+type tagInfo struct {
+	Tag        string     // tag of the image
+	ModifiedAt time.Time  // when was the tag Last Modified
+	Manifest   manifest   // current manifest details
+	Index      []manifest // history of manifests on this tag
+}
+
+type manifest struct {
+	SHA256    string
+	CreatedAt time.Time
+}
+
+func parseTagsInfo(objects []s3.S3ObjectInfo) map[string]*tagInfo {
+	tags := make(map[string]*tagInfo)
+	for _, obj := range objects {
+		// check if its a tag path /current/link
+		if strings.HasSuffix(obj.Key, "/current/link") {
+			parts := strings.Split(obj.Key, "/")
+			if len(parts) < 3 {
+				continue
+			}
+			tag := parts[len(parts)-3] // tag is third from the end tag path
+
+			_, ok := tags[tag]
+			if !ok {
+				tags[tag] = &tagInfo{Tag: tag, ModifiedAt: obj.LastModified}
+			}
+			if obj.LastModified.After(tags[tag].ModifiedAt) {
+				fmt.Println("why??", obj.LastModified, tags[tag].ModifiedAt)
+				// images[tag].CreatedAt = obj.LastModified
+			}
+			continue
+		}
+
+		// check if its index key path
+		if strings.Contains(obj.Key, "index/sha256/") {
+			parts := strings.Split(obj.Key, "/")
+			if len(parts) < 5 {
+				continue
+			}
+			tag := parts[len(parts)-5]    // tag is 5th from the end in index path
+			sha256 := parts[len(parts)-2] // index is 2nd from the end in index path
+
+			_, ok := tags[tag]
+			if !ok {
+				tags[tag] = &tagInfo{Tag: tag}
+			}
+			manifest := manifest{SHA256: sha256, CreatedAt: obj.LastModified}
+			tags[tag].Index = append(tags[tag].Index, manifest)
+			// update current manifests digest
+			if tags[tag].Manifest.CreatedAt.Before(obj.LastModified) {
+				tags[tag].Manifest = manifest
+			}
+		}
+	}
+	return tags
 }
 
 // handleManifests handles requests for /repository/{name}/manifests/{reference}

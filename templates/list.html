@@ -9,7 +9,7 @@
   <script type="text/javascript">
     $(document).ready(function () {
       $("#repos").DataTable({ pageLength: 100 });
-      $("#tags").DataTable({ pageLength: 100, order: [[1, 'desc']] });
+      $("#tags").DataTable({ pageLength: 100, order: [[2, 'desc']] });
       document.querySelector('#dt-search-0').focus();
     });
   </script>
@@ -45,21 +45,27 @@
         {{ end }}
       </tbody>
     </table>
-    {{ end }}{{ if gt (len .Tags) 0 }}
+    {{ end }}
+    {{ if gt (len .Tags) 0 }}
     <table id="tags" class="table table-striped table-bordered">
       <thead bgcolor="#ddd">
         <tr>
           <th>Tags</th>
+          <th>Manifest</th>
           <th>Created At</th>
         </tr>
       </thead>
       <tbody>
-        {{ range .Tags }}
+        {{ range $tag, $tagInfo := .Tags }}
         <tr>
           <td>
-            <a href="/repository/{{ $.Name }}/manifests/{{ . }}">{{ . }}</a>
+            <a href="/repository/{{ $.Name }}/manifests/{{ $tag }}">{{ $tagInfo.Tag }}</a>
           </td>
-          <td>{{ index $.CreatedAt . }}</td>
+          <td>
+            <span style="background-color:#ddd;">sha256</span>
+            <a href="/repository/{{ $.Name }}/manifests/{{ $tag }}">{{printf "%.12s" $tagInfo.Manifest.SHA256}}</a>
+          </td>
+          <td>{{ $tagInfo.ModifiedAt }}</td>
         </tr>
         {{ end }}
       </tbody>
