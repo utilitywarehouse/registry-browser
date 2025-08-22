@@ -180,9 +180,11 @@ func parseTagsInfo(objects []s3.S3ObjectInfo) map[string]*tagInfo {
 				tags[tag] = &tagInfo{Tag: tag}
 			}
 			manifest := manifest{SHA256: sha256, CreatedAt: obj.LastModified}
+
 			tags[tag].Index = append(tags[tag].Index, manifest)
-			// update current manifests digest
-			if tags[tag].Manifest.CreatedAt.Before(obj.LastModified) {
+
+			// update current manifests if latest found
+			if obj.LastModified.After(tags[tag].Manifest.CreatedAt) {
 				tags[tag].Manifest = manifest
 			}
 		}
