@@ -2,7 +2,6 @@ package s3
 
 import (
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -86,14 +85,11 @@ func (c *Client) ListTagObjectsWithMetadata(prefix string) ([]S3ObjectInfo, erro
 
 	err := c.svc.ListObjectsV2Pages(input, func(page *s3.ListObjectsV2Output, lastPage bool) bool {
 		for _, obj := range page.Contents {
-			// Only include objects ending in /current/link
-			if strings.HasSuffix(*obj.Key, "/current/link") {
-				results = append(results, S3ObjectInfo{
-					Key:          *obj.Key,
-					LastModified: *obj.LastModified,
-					Size:         *obj.Size,
-				})
-			}
+			results = append(results, S3ObjectInfo{
+				Key:          *obj.Key,
+				LastModified: *obj.LastModified,
+				Size:         *obj.Size,
+			})
 		}
 		return !lastPage
 	})
