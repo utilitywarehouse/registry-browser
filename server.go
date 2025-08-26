@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -164,10 +163,6 @@ func parseTagsInfo(objects []s3.S3ObjectInfo) map[string]*tagInfo {
 			if !ok {
 				tags[tag] = &tagInfo{Tag: tag, ModifiedAt: obj.LastModified}
 			}
-			if obj.LastModified.After(tags[tag].ModifiedAt) {
-				fmt.Println("why??", obj.LastModified, tags[tag].ModifiedAt)
-				// images[tag].CreatedAt = obj.LastModified
-			}
 			continue
 		}
 
@@ -197,7 +192,7 @@ func parseTagsInfo(objects []s3.S3ObjectInfo) map[string]*tagInfo {
 
 	// sort each index and only keep latest 10
 	for _, tag := range tags {
-		// sort in desc order of CreatedAt
+		// sort in desc order of ModifiedAt
 		slices.SortFunc(tag.Index, func(a, b manifest) int {
 			return b.ModifiedAt.Compare(a.ModifiedAt)
 		})
