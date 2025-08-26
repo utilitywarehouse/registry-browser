@@ -114,8 +114,11 @@
                   {{ range $index := $tagInfo.Index }}
                   {{ if gt (len $index.Tags) 0 }}
                   <tr>
-                    <td><a href="/repository/{{ $.Name }}/manifests/{{ index $index.Tags 0 }}">
-                        {{ join $index.Tags ","}}</a></td>
+                    <td>
+                      <a href="/repository/{{ $.Name }}/manifests/{{ index $index.Tags 0 }}">
+                        {{ join $index.Tags ", "}}
+                      </a>
+                    </td>
                     <td>
                       <span style="background-color:#ddd;">sha256</span>
                       {{printf "%.12s" $index.SHA256}}

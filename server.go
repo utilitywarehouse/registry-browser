@@ -148,7 +148,9 @@ type manifest struct {
 }
 
 func parseTagsInfo(objects []s3.S3ObjectInfo) map[string]*tagInfo {
+	shaLookup := make(map[string][]string)
 	tags := make(map[string]*tagInfo)
+
 	for _, obj := range objects {
 		// check if its a tag path /current/link
 		if strings.HasSuffix(obj.Key, "/current/link") {
@@ -202,17 +204,22 @@ func parseTagsInfo(objects []s3.S3ObjectInfo) map[string]*tagInfo {
 		if len(tag.Index) > 10 {
 			tag.Index = slices.Delete(tag.Index, 10, len(tag.Index))
 		}
+		// build sha lookup map to search sha -> current_tags
+		shaLookup[tag.Manifest.SHA256] = append(shaLookup[tag.Manifest.SHA256], tag.Tag)
 	}
 
 	// Loop through manifests history (index) and find current tags
 	for _, tag := range tags {
-		for i := range tag.Index {
-			for _, LookupTag := range tags {
-				if tag.Index[i].SHA256 == LookupTag.Manifest.SHA256 {
-					tag.Index[i].Tags = append(tag.Index[i].Tags, LookupTag.Tag)
-				}
+		var processedIndex []manifest
+		for _, index := range tag.Index {
+			current_tags := shaLookup[index.SHA256]
+			// if current tags is now known then we can safely remove sha from index
+			if len(current_tags) != 0 {
+				index.Tags = current_tags
+				processedIndex = append(processedIndex, index)
 			}
 		}
+		tag.Index = processedIndex
 	}
 	return tags
 }
