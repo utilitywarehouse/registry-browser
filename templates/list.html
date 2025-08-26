@@ -93,15 +93,14 @@
             <a href="/repository/{{ $.Name }}/manifests/{{ $tag }}">{{ $tagInfo.Tag }}</a>
           </td>
           <td>
-            <span style="background-color:#ddd;">sha256</span>
-            {{printf "%.12s" $tagInfo.Manifest.SHA256}}
+            sha256:{{printf "%.12s" $tagInfo.Manifest.SHA256}}
           </td>
           <td>{{ $tagInfo.ModifiedAt }}</td>
           <td style="display: none;">
             <!-- add nested table for index info will be shown by JS click event -->
             {{ if gt (len $tagInfo.Index) 1 }}
             <div style="padding-left:50px;">
-              <h6>Latest version history for <span style="background-color:#ddd;">{{$tag}}</span> tag:</h6>
+              <h6>Latest version history for <span style="font-weight: bold;">{{$tag}}</span> tag:</h6>
               <table class="table table-bordered">
                 <thead>
                   <tr>
@@ -121,8 +120,7 @@
                       {{end}}
                     </td>
                     <td>
-                      <span style="background-color:#ddd;">sha256</span>
-                      {{printf "%.12s" $index.SHA256}}
+                      sha256:{{printf "%.12s" $index.SHA256}}
                     </td>
                     <td>{{ $index.ModifiedAt }}</td>
                   </tr>
