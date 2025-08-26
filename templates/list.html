@@ -115,9 +115,10 @@
                   {{ if gt (len $index.Tags) 0 }}
                   <tr>
                     <td>
-                      <a href="/repository/{{ $.Name }}/manifests/{{ index $index.Tags 0 }}">
-                        {{ join $index.Tags ", "}}
-                      </a>
+                      {{ range $i, $indexTag := $index.Tags }}
+                      {{if $i}},{{end}}
+                      <a href="/repository/{{ $.Name }}/manifests/{{ $indexTag }}">{{ $indexTag }}</a>
+                      {{end}}
                     </td>
                     <td>
                       <span style="background-color:#ddd;">sha256</span>
