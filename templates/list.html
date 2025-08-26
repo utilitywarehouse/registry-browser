@@ -101,7 +101,7 @@
             <!-- add nested table for index info will be shown by JS click event -->
             {{ if gt (len $tagInfo.Index) 1 }}
             <div style="padding-left:50px;">
-              <h6>Latest version History for <span style="background-color:#ddd;">{{$tag}}</span> Tag:</h6>
+              <h6>Latest version history for <span style="background-color:#ddd;">{{$tag}}</span> tag:</h6>
               <table class="table table-bordered">
                 <thead>
                   <tr>
@@ -112,14 +112,17 @@
                 </thead>
                 <tbody>
                   {{ range $index := $tagInfo.Index }}
+                  {{ if gt (len $index.Tags) 0 }}
                   <tr>
-                    <td>{{ join $index.Tags ", " }}</td>
+                    <td><a href="/repository/{{ $.Name }}/manifests/{{ index $index.Tags 0 }}">
+                        {{ join $index.Tags ","}}</a></td>
                     <td>
                       <span style="background-color:#ddd;">sha256</span>
                       {{printf "%.12s" $index.SHA256}}
                     </td>
                     <td>{{ $index.ModifiedAt }}</td>
                   </tr>
+                  {{end}}
                   {{end}}
                 </tbody>
               </table>
