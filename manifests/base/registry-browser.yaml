@@ -41,7 +41,7 @@ spec:
             - name: browser
               containerPort: 8080
         - name: registry
-          image: registry:2.8.1
+          image: registry:3.1.1
           resources:
             requests:
               cpu: 0m
@@ -54,7 +54,7 @@ spec:
               containerPort: 5002
           volumeMounts:
             - name: registry-config
-              mountPath: /etc/docker/registry/
+              mountPath: /etc/distribution/
               readOnly: true
       volumes:
         - name: registry-config
