@@ -1,4 +1,4 @@
-FROM golang:1.23-alpine AS build
+FROM golang:1.27-alpine AS build
 
 WORKDIR /workspace
 # Copy the Go Modules manifests
@@ -12,9 +12,9 @@ RUN go mod download
 COPY . .
 
 RUN go test -v -cover ./... \
-      && CGO_ENABLED=0 go build -o /registry-browser .
+    && CGO_ENABLED=0 go build -o /registry-browser .
 
-FROM alpine:3.21
+FROM alpine:3.24
 ADD templates /templates
 ADD static /static
 COPY --from=build /registry-browser /registry-browser
